@@ -1,17 +1,17 @@
-// Copyright (c) 2011-2017 The Bitcoin Core developers
+// Copyright (c) 2011-2014 The Bitcoin Core developers
+// Copyright (c) 2014-2017 The Dash Core developers
+// Copyright (c) 2019 The JoashCoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <qt/editaddressdialog.h>
-#include <qt/forms/ui_editaddressdialog.h>
+#include "editaddressdialog.h"
+#include "ui_editaddressdialog.h"
 
-#include <qt/addresstablemodel.h>
-#include <qt/guiutil.h>
+#include "addresstablemodel.h"
+#include "guiutil.h"
 
 #include <QDataWidgetMapper>
 #include <QMessageBox>
-
-extern OutputType g_address_type;
 
 EditAddressDialog::EditAddressDialog(Mode _mode, QWidget *parent) :
     QDialog(parent),
@@ -79,8 +79,7 @@ bool EditAddressDialog::saveCurrentRow()
         address = model->addRow(
                 mode == NewSendingAddress ? AddressTableModel::Send : AddressTableModel::Receive,
                 ui->labelEdit->text(),
-                ui->addressEdit->text(),
-                g_address_type);
+                ui->addressEdit->text());
         break;
     case EditReceivingAddress:
     case EditSendingAddress:
@@ -110,7 +109,7 @@ void EditAddressDialog::accept()
             break;
         case AddressTableModel::INVALID_ADDRESS:
             QMessageBox::warning(this, windowTitle(),
-                tr("The entered address \"%1\" is not a valid JNitaCoin address.").arg(ui->addressEdit->text()),
+                tr("The entered address \"%1\" is not a valid JoashCoin address.").arg(ui->addressEdit->text()),
                 QMessageBox::Ok, QMessageBox::Ok);
             break;
         case AddressTableModel::DUPLICATE_ADDRESS:

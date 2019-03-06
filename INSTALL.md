@@ -1,5 +1,5 @@
-Building JNitaCoin
-================
+Building JoashCoin
+=============
 
 See doc/build-*.md for instructions on building the various
-elements of the JNitaCoin Core reference implementation of JNitaCoin.
+elements of the JoashCoin Core reference implementation of JoashCoin.

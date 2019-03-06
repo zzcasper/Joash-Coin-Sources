@@ -1,17 +1,17 @@
 // Copyright (c) 2012 Pieter Wuille
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
 #ifndef BITCOIN_ADDRMAN_H
 #define BITCOIN_ADDRMAN_H
 
-#include <netaddress.h>
-#include <protocol.h>
-#include <random.h>
-#include <sync.h>
-#include <timedata.h>
-#include <util.h>
+#include "netaddress.h"
+#include "protocol.h"
+#include "random.h"
+#include "sync.h"
+#include "timedata.h"
+#include "util.h"
 
 #include <map>
 #include <set>
@@ -136,13 +136,13 @@ public:
  */
 
 //! total number of buckets for tried addresses
-#define ADDRMAN_TRIED_BUCKET_COUNT_LOG2 8
+#define ADDRMAN_TRIED_BUCKET_COUNT 256
 
 //! total number of buckets for new addresses
-#define ADDRMAN_NEW_BUCKET_COUNT_LOG2 10
+#define ADDRMAN_NEW_BUCKET_COUNT 1024
 
 //! maximum allowed number of entries in buckets for new and tried addresses
-#define ADDRMAN_BUCKET_SIZE_LOG2 6
+#define ADDRMAN_BUCKET_SIZE 64
 
 //! over how many buckets entries with tried addresses from a single group (/16 for IPv4) are spread
 #define ADDRMAN_TRIED_BUCKETS_PER_GROUP 8
@@ -171,11 +171,6 @@ public:
 //! the maximum number of nodes to return in a getaddr call
 #define ADDRMAN_GETADDR_MAX 2500
 
-//! Convenience
-#define ADDRMAN_TRIED_BUCKET_COUNT (1 << ADDRMAN_TRIED_BUCKET_COUNT_LOG2)
-#define ADDRMAN_NEW_BUCKET_COUNT (1 << ADDRMAN_NEW_BUCKET_COUNT_LOG2)
-#define ADDRMAN_BUCKET_SIZE (1 << ADDRMAN_BUCKET_SIZE_LOG2)
-
 /** 
  * Stochastical (IP) address manager 
  */
@@ -192,7 +187,7 @@ private:
     std::map<int, CAddrInfo> mapInfo;
 
     //! find an nId based on its network address
-    std::map<CNetAddr, int> mapAddr;
+    std::map<CService, int> mapAddr;
 
     //! randomly-ordered vector of all nIds
     std::vector<int> vRandom;
@@ -212,6 +207,9 @@ private:
     //! last time Good was called (memory only)
     int64_t nLastGood;
 
+    // discriminate entries based on port. Should be false on mainnet/testnet and can be true on devnet/regtest
+    bool discriminatePorts;
+
 protected:
     //! secret key to randomize bucket select with
     uint256 nKey;
@@ -220,11 +218,11 @@ protected:
     FastRandomContext insecure_rand;
 
     //! Find an entry.
-    CAddrInfo* Find(const CNetAddr& addr, int *pnId = nullptr);
+    CAddrInfo* Find(const CService& addr, int *pnId = NULL);
 
     //! find an entry, creating it if necessary.
     //! nTime and nServices of the found node are updated, if necessary.
-    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = nullptr);
+    CAddrInfo* Create(const CAddress &addr, const CNetAddr &addrSource, int *pnId = NULL);
 
     //! Swap two elements in vRandom.
     void SwapRandom(unsigned int nRandomPos1, unsigned int nRandomPos2);
@@ -313,9 +311,9 @@ public:
         s << nUBuckets;
         std::map<int, int> mapUnkIds;
         int nIds = 0;
-        for (const auto& entry : mapInfo) {
-            mapUnkIds[entry.first] = nIds;
-            const CAddrInfo &info = entry.second;
+        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
+            mapUnkIds[(*it).first] = nIds;
+            const CAddrInfo &info = (*it).second;
             if (info.nRefCount) {
                 assert(nIds != nNew); // this means nNew was wrong, oh ow
                 s << info;
@@ -323,8 +321,8 @@ public:
             }
         }
         nIds = 0;
-        for (const auto& entry : mapInfo) {
-            const CAddrInfo &info = entry.second;
+        for (std::map<int, CAddrInfo>::const_iterator it = mapInfo.begin(); it != mapInfo.end(); it++) {
+            const CAddrInfo &info = (*it).second;
             if (info.fInTried) {
                 assert(nIds != nTried); // this means nTried was wrong, oh ow
                 s << info;
@@ -447,7 +445,7 @@ public:
             }
         }
         if (nLost + nLostUnk > 0) {
-            LogPrint(BCLog::ADDRMAN, "addrman lost %i new and %i tried addresses due to collisions\n", nLostUnk, nLost);
+            LogPrint("addrman", "addrman lost %i new and %i tried addresses due to collisions\n", nLostUnk, nLost);
         }
 
         Check();
@@ -455,7 +453,6 @@ public:
 
     void Clear()
     {
-        LOCK(cs);
         std::vector<int>().swap(vRandom);
         nKey = GetRandHash();
         for (size_t bucket = 0; bucket < ADDRMAN_NEW_BUCKET_COUNT; bucket++) {
@@ -473,11 +470,10 @@ public:
         nTried = 0;
         nNew = 0;
         nLastGood = 1; //Initially at 1 so that "never" is strictly worse.
-        mapInfo.clear();
-        mapAddr.clear();
     }
 
-    CAddrMan()
+    CAddrMan(bool _discriminatePorts = false) :
+        discriminatePorts(_discriminatePorts)
     {
         Clear();
     }
@@ -515,9 +511,8 @@ public:
         Check();
         fRet |= Add_(addr, source, nTimePenalty);
         Check();
-        if (fRet) {
-            LogPrint(BCLog::ADDRMAN, "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort(), source.ToString(), nTried, nNew);
-        }
+        if (fRet)
+            LogPrint("addrman", "Added %s from %s: %i tried, %i new\n", addr.ToStringIPPort(), source.ToString(), nTried, nNew);
         return fRet;
     }
 
@@ -530,9 +525,8 @@ public:
         for (std::vector<CAddress>::const_iterator it = vAddr.begin(); it != vAddr.end(); it++)
             nAdd += Add_(*it, source, nTimePenalty) ? 1 : 0;
         Check();
-        if (nAdd) {
-            LogPrint(BCLog::ADDRMAN, "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
-        }
+        if (nAdd)
+            LogPrint("addrman", "Added %i addresses from %s: %i tried, %i new\n", nAdd, source.ToString(), nTried, nNew);
         return nAdd > 0;
     }
 

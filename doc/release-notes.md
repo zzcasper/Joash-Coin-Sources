@@ -1,90 +1,99 @@
-Bitcoin Core version 0.16.3 is now available from:
+JoashCoin Core version 0.12.3.3
+==========================
 
-  <https://bitcoincore.org/bin/bitcoin-core-0.16.3/>
+Release is now available from:
 
-This is a new minor version release, with various bugfixes
-as well as updated translations.
+  <https://www.joashcoin.org/downloads/#wallets>
 
-Please report bugs using the issue tracker at GitHub:
+This is a critical bugfix release.
 
-  <https://github.com/bitcoin/bitcoin/issues>
+Please report bugs using the issue tracker at github:
 
-To receive security and update notifications, please subscribe to:
+  <https://github.com/joashcoinpay/joashcoin/issues>
 
-  <https://bitcoincore.org/en/list/announcements/join/>
+
+Upgrading and downgrading
+=========================
 
 How to Upgrade
-==============
+--------------
 
 If you are running an older version, shut it down. Wait until it has completely
 shut down (which might take a few minutes for older versions), then run the
-installer (on Windows) or just copy over `/Applications/Bitcoin-Qt` (on Mac)
-or `bitcoind`/`bitcoin-qt` (on Linux).
+installer (on Windows) or just copy over /Applications/JoashCoin-Qt (on Mac) or
+joashcoind/joashcoin-qt (on Linux).
 
-The first time you run version 0.15.0 or newer, your chainstate database will be converted to a
-new format, which will take anywhere from a few minutes to half an hour,
-depending on the speed of your machine.
+Downgrade warning
+-----------------
 
-Note that the block database format also changed in version 0.8.0 and there is no
-automatic upgrade code from before version 0.8 to version 0.15.0 or higher. Upgrading
-directly from 0.7.x and earlier without re-downloading the blockchain is not supported.
-However, as usual, old wallet versions are still supported.
+### Downgrade to a version < 0.12.2.2
 
-Downgrading warning
--------------------
+Because release 0.12.2.2 included the [per-UTXO fix](release-notes/joashcoin/release-notes-0.12.2.2.md#per-utxo-fix)
+which changed the structure of the internal database, you will have to reindex
+the database if you decide to use any pre-0.12.2.2 version.
 
-Wallets created in 0.16 and later are not compatible with versions prior to 0.16
-and will not work if you try to use newly created wallets in older versions. Existing
-wallets that were created with older versions are not affected by this.
+Wallet forward or backward compatibility was not affected.
 
-Compatibility
-==============
+### Downgrade to 0.12.2.2/3, 0.12.3.1/2
 
-Bitcoin Core is extensively tested on multiple operating systems using
-the Linux kernel, macOS 10.8+, and Windows Vista and later. Windows XP is not supported.
+Downgrading to these versions does not require any additional actions, should be
+fully compatible.
 
-Bitcoin Core should also work on most other Unix-like systems but is not
-frequently tested on them.
 
 Notable changes
 ===============
 
-Denial-of-Service vulnerability
--------------------------------
+Fix crash bug with duplicate inputs within a transaction
+--------------------------------------------------------
 
-A denial-of-service vulnerability exploitable by miners has been discovered in
-Bitcoin Core versions 0.14.0 up to 0.16.2. It is recommended to upgrade any of
-the vulnerable versions to 0.16.3 as soon as possible.
+There was a critical bug discovered in Bitcoin Core's codebase recently which
+can cause node receiving a block to crash https://github.com/bitcoin/bitcoin/pull/14247
 
-0.16.3 change log
-------------------
+0.12.3.3 Change log
+===================
 
-### Consensus
-- #14249 `696b936` Fix crash bug with duplicate inputs within a transaction (TheBlueMatt, sdaftuar)
-
-### RPC and other APIs
-- #13547 `212ef1f` Make `signrawtransaction*` give an error when amount is needed but missing (ajtowns)
-
-### Miscellaneous
-- #13655 `1cdbea7` bitcoinconsensus: invalid flags error should be set to `bitcoinconsensus_err` (afk11)
-
-### Documentation
-- #13844 `11b9dbb` correct the help output for -prune (hebasto)
+See detailed [set of changes](https://github.com/joashcoinpay/joashcoin/compare/v0.12.3.2...joashcoinpay:v0.12.3.3).
 
 Credits
 =======
 
-Thanks to everyone who directly contributed to this release:
+Thanks to everyone who directly contributed to this release,
+as well as everyone who submitted issues and reviewed pull requests.
 
-- Anthony Towns
-- Hennadii Stepanov
-- Matt Corallo
-- Suhas Daftuar
-- Thomas Kerin
-- Wladimir J. van der Laan
 
-And to those that reported security issues:
+Older releases
+==============
 
-- beardnboobies
+JoashCoin was previously known as Darkcoin.
 
-As well as everyone that helped translating on [Transifex](https://www.transifex.com/projects/p/bitcoin/).
+Darkcoin tree 0.8.x was a fork of Litecoin tree 0.8, original name was XCoin
+which was first released on Jan/18/2014.
+
+Darkcoin tree 0.9.x was the open source implementation of masternodes based on
+the 0.8.x tree and was first released on Mar/13/2014.
+
+Darkcoin tree 0.10.x used to be the closed source implementation of Darksend
+which was released open source on Sep/25/2014.
+
+JoashCoin Core tree 0.11.x was a fork of Bitcoin Core tree 0.9,
+Darkcoin was rebranded to JoashCoin.
+
+JoashCoin Core tree 0.12.0.x was a fork of Bitcoin Core tree 0.10.
+
+JoashCoin Core tree 0.12.1.x was a fork of Bitcoin Core tree 0.12.
+
+These release are considered obsolete. Old release notes can be found here:
+
+- [v0.12.3.2](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.12.3.2.md) released Jul/09/2018
+- [v0.12.3.1](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.12.3.1.md) released Jul/03/2018
+- [v0.12.2.3](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.12.2.3.md) released Jan/12/2018
+- [v0.12.2.2](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.12.2.2.md) released Dec/17/2017
+- [v0.12.2](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.12.2.md) released Nov/08/2017
+- [v0.12.1](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.12.1.md) released Feb/06/2017
+- [v0.12.0](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.12.0.md) released Jun/15/2015
+- [v0.11.2](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.11.2.md) released Mar/04/2015
+- [v0.11.1](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.11.1.md) released Feb/10/2015
+- [v0.11.0](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.11.0.md) released Jan/15/2015
+- [v0.10.x](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.10.0.md) released Sep/25/2014
+- [v0.9.x](https://github.com/joashcoinpay/joashcoin/blob/master/doc/release-notes/joashcoin/release-notes-0.9.0.md) released Mar/13/2014
+

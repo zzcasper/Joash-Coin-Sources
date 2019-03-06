@@ -6,6 +6,7 @@
 sign=false
 verify=false
 build=false
+setupenv=false
 
 # Systems to build
 linux=true
@@ -16,10 +17,11 @@ osx=true
 SIGNER=
 VERSION=
 commit=false
-url=https://github.com/jnitacoin-project/jnitacoin
+url=https://github.com/joashcoinpay/joashcoin
 proc=2
 mem=2000
 lxc=true
+docker=false
 osslTarUrl=http://downloads.sourceforge.net/project/osslsigncode/osslsigncode/osslsigncode-1.7.1.tar.gz
 osslPatchUrl=https://bitcoincore.org/cfields/osslsigncode-Backports-to-1.7.1.patch
 scriptName=$(basename -- "$0")
@@ -30,7 +32,7 @@ commitFiles=true
 read -d '' usage <<- EOF
 Usage: $scriptName [-c|u|v|b|s|B|o|h|j|m|] signer version
 
-Run this script from the directory containing the jnitacoin, gitian-builder, gitian.sigs.jtk, and jnitacoin-detached-sigs.
+Run this script from the directory containing the joashcoin, gitian-builder, gitian.sigs, and joashcoin-detached-sigs.
 
 Arguments:
 signer          GPG signer to sign each build assert file
@@ -38,7 +40,7 @@ version		Version number, commit, or branch to build. If building a commit or bra
 
 Options:
 -c|--commit	Indicate that the version argument is for a commit or branch
--u|--url	Specify the URL of the repository. Default is https://github.com/jnitacoin-project/jnitacoin
+-u|--url	Specify the URL of the repository. Default is https://github.com/joashcoinpay/joashcoin
 -v|--verify 	Verify the gitian build
 -b|--build	Do a gitian build
 -s|--sign	Make signed binaries for Windows and Mac OSX
@@ -46,8 +48,10 @@ Options:
 -o|--os		Specify which Operating Systems the build is for. Default is lwx. l for linux, w for windows, x for osx
 -j		Number of processes to use. Default 2
 -m		Memory to allocate in MiB. Default 2000
---kvm           Use KVM instead of LXC
---setup         Set up the Gitian building environment. Uses KVM. If you want to use lxc, use the --lxc option. Only works on Debian-based systems (Ubuntu, Debian)
+--kvm           Use KVM
+--lxc           Use LXC
+--docker        Use Docker
+--setup         Setup the gitian building environment. Uses KVM. If you want to use lxc, use the --lxc option. If you want to use Docker, use --docker. Only works on Debian-based systems (Ubuntu, Debian)
 --detach-sign   Create the assert file for detached signing. Will not commit anything.
 --no-commit     Do not commit anything to git
 -h|--help	Print this help message
@@ -77,7 +81,7 @@ while :; do
         -S|--signer)
 	    if [ -n "$2" ]
 	    then
-		SIGNER=$2
+		SIGNER="$2"
 		shift
 	    else
 		echo 'Error: "--signer" requires a non-empty argument.'
@@ -105,7 +109,7 @@ while :; do
 		fi
 		shift
 	    else
-		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)'
+		echo 'Error: "--os" requires an argument containing an l (for linux), w (for windows), or x (for Mac OSX)\n'
 		exit 1
 	    fi
 	    ;;
@@ -152,8 +156,19 @@ while :; do
 	    fi
 	    ;;
         # kvm
+        --lxc)
+            lxc=true
+            docker=false
+            ;;
+        # kvm
         --kvm)
             lxc=false
+            docker=false
+            ;;
+        # docker
+        --docker)
+            lxc=false
+            docker=true
             ;;
         # Detach sign
         --detach-sign)
@@ -178,6 +193,11 @@ done
 if [[ $lxc = true ]]
 then
     export USE_LXC=1
+    export LXC_BRIDGE=lxcbr0
+    sudo ifconfig lxcbr0 up 10.0.3.2
+elif [[ $docker = true ]]
+then
+    export USE_DOCKER=1
 fi
 
 # Check for OSX SDK
@@ -188,9 +208,9 @@ then
 fi
 
 # Get signer
-if [[ -n "$1" ]]
+if [[ -n"$1" ]]
 then
-    SIGNER=$1
+    SIGNER="$1"
     shift
 fi
 
@@ -203,7 +223,7 @@ then
 fi
 
 # Check that a signer is specified
-if [[ $SIGNER == "" ]]
+if [[ "$SIGNER" == "" ]]
 then
     echo "$scriptName: Missing signer."
     echo "Try $scriptName --help for more information"
@@ -229,14 +249,18 @@ echo ${COMMIT}
 if [[ $setup = true ]]
 then
     sudo apt-get install ruby apache2 git apt-cacher-ng python-vm-builder qemu-kvm qemu-utils
-    git clone https://github.com/jnitacoin-project/gitian.sigs.jtk.git
-    git clone https://github.com/jnitacoin-project/jnitacoin-detached-sigs.git
+    git clone https://github.com/joashcoinpay/gitian.sigs.git
+    git clone https://github.com/joashcoinpay/joashcoin-detached-sigs.git
     git clone https://github.com/devrandom/gitian-builder.git
     pushd ./gitian-builder
     if [[ -n "$USE_LXC" ]]
     then
         sudo apt-get install lxc
         bin/make-base-vm --suite trusty --arch amd64 --lxc
+    elif [[ -n "$USE_DOCKER" ]]
+    then
+        sudo apt-get install docker-ce
+        bin/make-base-vm --suite trusty --arch amd64 --docker
     else
         bin/make-base-vm --suite trusty --arch amd64
     fi
@@ -244,7 +268,7 @@ then
 fi
 
 # Set up build
-pushd ./jnitacoin
+pushd ./joashcoin
 git fetch
 git checkout ${COMMIT}
 popd
@@ -253,7 +277,7 @@ popd
 if [[ $build = true ]]
 then
 	# Make output folder
-	mkdir -p ./jnitacoin-binaries/${VERSION}
+	mkdir -p ./joashcoincore-binaries/${VERSION}
 	
 	# Build Dependencies
 	echo ""
@@ -263,7 +287,7 @@ then
 	mkdir -p inputs
 	wget -N -P inputs $osslPatchUrl
 	wget -N -P inputs $osslTarUrl
-	make -C ../jnitacoin/depends download SOURCES_PATH=`pwd`/cache/common
+	make -C ../joashcoin/depends download SOURCES_PATH=`pwd`/cache/common
 
 	# Linux
 	if [[ $linux = true ]]
@@ -271,9 +295,9 @@ then
             echo ""
 	    echo "Compiling ${VERSION} Linux"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit jnitacoin=${COMMIT} --url jnitacoin=${url} ../jnitacoin/contrib/gitian-descriptors/gitian-linux.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-linux --destination ../gitian.sigs.jtk/ ../jnitacoin/contrib/gitian-descriptors/gitian-linux.yml
-	    mv build/out/jnitacoin-*.tar.gz build/out/src/jnitacoin-*.tar.gz ../jnitacoin-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit joashcoin=${COMMIT} --url joashcoin=${url} ../joashcoin/contrib/gitian-descriptors/gitian-linux.yml
+	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-linux --destination ../gitian.sigs/ ../joashcoin/contrib/gitian-descriptors/gitian-linux.yml
+	    mv build/out/joashcoincore-*.tar.gz build/out/src/joashcoincore-*.tar.gz ../joashcoincore-binaries/${VERSION}
 	fi
 	# Windows
 	if [[ $windows = true ]]
@@ -281,10 +305,10 @@ then
 	    echo ""
 	    echo "Compiling ${VERSION} Windows"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit jnitacoin=${COMMIT} --url jnitacoin=${url} ../jnitacoin/contrib/gitian-descriptors/gitian-win.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-win-unsigned --destination ../gitian.sigs.jtk/ ../jnitacoin/contrib/gitian-descriptors/gitian-win.yml
-	    mv build/out/jnitacoin-*-win-unsigned.tar.gz inputs/jnitacoin-win-unsigned.tar.gz
-	    mv build/out/jnitacoin-*.zip build/out/jnitacoin-*.exe ../jnitacoin-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit joashcoin=${COMMIT} --url joashcoin=${url} ../joashcoin/contrib/gitian-descriptors/gitian-win.yml
+	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-unsigned --destination ../gitian.sigs/ ../joashcoin/contrib/gitian-descriptors/gitian-win.yml
+	    mv build/out/joashcoincore-*-win-unsigned.tar.gz inputs/joashcoincore-win-unsigned.tar.gz
+	    mv build/out/joashcoincore-*.zip build/out/joashcoincore-*.exe ../joashcoincore-binaries/${VERSION}
 	fi
 	# Mac OSX
 	if [[ $osx = true ]]
@@ -292,10 +316,10 @@ then
 	    echo ""
 	    echo "Compiling ${VERSION} Mac OSX"
 	    echo ""
-	    ./bin/gbuild -j ${proc} -m ${mem} --commit jnitacoin=${COMMIT} --url jnitacoin=${url} ../jnitacoin/contrib/gitian-descriptors/gitian-osx.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-unsigned --destination ../gitian.sigs.jtk/ ../jnitacoin/contrib/gitian-descriptors/gitian-osx.yml
-	    mv build/out/jnitacoin-*-osx-unsigned.tar.gz inputs/jnitacoin-osx-unsigned.tar.gz
-	    mv build/out/jnitacoin-*.tar.gz build/out/jnitacoin-*.dmg ../jnitacoin-binaries/${VERSION}
+	    ./bin/gbuild -j ${proc} -m ${mem} --commit joashcoin=${COMMIT} --url joashcoin=${url} ../joashcoin/contrib/gitian-descriptors/gitian-osx.yml
+	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-unsigned --destination ../gitian.sigs/ ../joashcoin/contrib/gitian-descriptors/gitian-osx.yml
+	    mv build/out/joashcoincore-*-osx-unsigned.tar.gz inputs/joashcoincore-osx-unsigned.tar.gz
+	    mv build/out/joashcoincore-*.tar.gz build/out/joashcoincore-*.dmg ../joashcoincore-binaries/${VERSION}
 	fi
 	popd
 
@@ -306,9 +330,9 @@ then
             echo "Committing ${VERSION} Unsigned Sigs"
             echo ""
             pushd gitian.sigs
-            git add ${VERSION}-linux/${SIGNER}
-            git add ${VERSION}-win-unsigned/${SIGNER}
-            git add ${VERSION}-osx-unsigned/${SIGNER}
+            git add ${VERSION}-linux/"${SIGNER}"
+            git add ${VERSION}-win-unsigned/"${SIGNER}"
+            git add ${VERSION}-osx-unsigned/"${SIGNER}"
             git commit -a -m "Add ${VERSION} unsigned sigs for ${SIGNER}"
             popd
         fi
@@ -322,27 +346,27 @@ then
 	echo ""
 	echo "Verifying v${VERSION} Linux"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs.jtk/ -r ${VERSION}-linux ../jnitacoin/contrib/gitian-descriptors/gitian-linux.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-linux ../joashcoin/contrib/gitian-descriptors/gitian-linux.yml
 	# Windows
 	echo ""
 	echo "Verifying v${VERSION} Windows"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs.jtk/ -r ${VERSION}-win-unsigned ../jnitacoin/contrib/gitian-descriptors/gitian-win.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-win-unsigned ../joashcoin/contrib/gitian-descriptors/gitian-win.yml
 	# Mac OSX	
 	echo ""
 	echo "Verifying v${VERSION} Mac OSX"
 	echo ""	
-	./bin/gverify -v -d ../gitian.sigs.jtk/ -r ${VERSION}-osx-unsigned ../jnitacoin/contrib/gitian-descriptors/gitian-osx.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-unsigned ../joashcoin/contrib/gitian-descriptors/gitian-osx.yml
 	# Signed Windows
 	echo ""
 	echo "Verifying v${VERSION} Signed Windows"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs.jtk/ -r ${VERSION}-osx-signed ../jnitacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../joashcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	# Signed Mac OSX
 	echo ""
 	echo "Verifying v${VERSION} Signed Mac OSX"
 	echo ""
-	./bin/gverify -v -d ../gitian.sigs.jtk/ -r ${VERSION}-osx-signed ../jnitacoin/contrib/gitian-descriptors/gitian-osx-signer.yml	
+	./bin/gverify -v -d ../gitian.sigs/ -r ${VERSION}-osx-signed ../joashcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
 	popd
 fi
 
@@ -357,10 +381,10 @@ then
 	    echo ""
 	    echo "Signing ${VERSION} Windows"
 	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../jnitacoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-win-signed --destination ../gitian.sigs.jtk/ ../jnitacoin/contrib/gitian-descriptors/gitian-win-signer.yml
-	    mv build/out/jnitacoin-*win64-setup.exe ../jnitacoin-binaries/${VERSION}
-	    mv build/out/jnitacoin-*win32-setup.exe ../jnitacoin-binaries/${VERSION}
+	    ./bin/gbuild -i --commit signature=${COMMIT} ../joashcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-win-signed --destination ../gitian.sigs/ ../joashcoin/contrib/gitian-descriptors/gitian-win-signer.yml
+	    mv build/out/joashcoincore-*win64-setup.exe ../joashcoincore-binaries/${VERSION}
+	    mv build/out/joashcoincore-*win32-setup.exe ../joashcoincore-binaries/${VERSION}
 	fi
 	# Sign Mac OSX
 	if [[ $osx = true ]]
@@ -368,9 +392,9 @@ then
 	    echo ""
 	    echo "Signing ${VERSION} Mac OSX"
 	    echo ""
-	    ./bin/gbuild -i --commit signature=${COMMIT} ../jnitacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    ./bin/gsign -p $signProg --signer $SIGNER --release ${VERSION}-osx-signed --destination ../gitian.sigs.jtk/ ../jnitacoin/contrib/gitian-descriptors/gitian-osx-signer.yml
-	    mv build/out/jnitacoin-osx-signed.dmg ../jnitacoin-binaries/${VERSION}/jnitacoin-${VERSION}-osx.dmg
+	    ./bin/gbuild -i --commit signature=${COMMIT} ../joashcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	    ./bin/gsign -p "$signProg" --signer "$SIGNER" --release ${VERSION}-osx-signed --destination ../gitian.sigs/ ../joashcoin/contrib/gitian-descriptors/gitian-osx-signer.yml
+	    mv build/out/joashcoincore-osx-signed.dmg ../joashcoincore-binaries/${VERSION}/joashcoincore-${VERSION}-osx.dmg
 	fi
 	popd
 
@@ -381,8 +405,8 @@ then
             echo ""
             echo "Committing ${VERSION} Signed Sigs"
             echo ""
-            git add ${VERSION}-win-signed/${SIGNER}
-            git add ${VERSION}-osx-signed/${SIGNER}
+            git add ${VERSION}-win-signed/"${SIGNER}"
+            git add ${VERSION}-osx-signed/"${SIGNER}"
             git commit -a -m "Add ${VERSION} signed binary sigs for ${SIGNER}"
             popd
         fi

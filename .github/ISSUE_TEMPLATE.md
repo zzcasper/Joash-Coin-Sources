@@ -1,21 +1,37 @@
-<!-- This issue tracker is only for technical issues related to JNitaCoin Core.
+<!--- Remove sections that do not apply -->
 
-General jnitacoin questions and/or support requests and are best directed to the [jnitacointalk.io forums](https://jnitacointalk.io/).
+This issue tracker is only for technical issues related to JoashCoin Core.
 
-For reporting security issues, please contact the JNitaCoin developers on the #jnitacoin-dev Freenode IRC channel or alternatively you can email us at contact@jnitacoin.org.
+General JoashCoin questions and/or support requests and are best directed to the [JoashCoinpay Reddit](https://www.reddit.com/r/joashcoinpay/).
 
-If the node is "stuck" during sync or giving "block checksum mismatch" errors, please ensure your hardware is stable by running memtest and observe CPU temperature with a load-test tool such as linpack before creating an issue! -->
+To report critical security issues, email infosec@joashcoin.org instead of creating Github issues.
 
-<!-- Describe the issue -->
-<!--- What behavior did you expect? -->
+### Describe the issue
 
-<!--- What was the actual behavior (provide screenshots if the issue is GUI-related)? -->
+### Can you reliably reproduce the issue?
+#### If so, please list the steps to reproduce below:
+1.
+2.
+3.
 
-<!--- How reliably can you reproduce the issue, what are the steps to do so? -->
+### Expected behaviour
+Tell us what should happen
 
-<!-- What version of JNitaCoin Core are you using, where did you get it (website, self-compiled, etc)? -->
+### Actual behaviour
+Tell us what happens instead
 
-<!-- What type of machine are you observing the error on (OS/CPU and disk type)? -->
+### Screenshots.
+If the issue is related to the GUI, screenshots can be added to this issue via drag & drop.
 
-<!-- Any extra information that might be useful in the debugging process. -->
-<!--- This is normally the contents of a `debug.log` or `config.log` file. Raw text or a link to a pastebin type site are preferred. -->
+### What version of JoashCoin Core are you using?
+List the version number/commit ID, and if it is an official binary, self compiled or a distribution package such as PPA.
+
+### Machine specs:
+- OS:
+- CPU:
+- RAM:
+- Disk size:
+- Disk Type (HD/SDD):
+
+### Any extra information that might be useful in the debugging process.
+This is normally the contents of a `debug.log` or `config.log` file. Raw text or a link to a pastebin type site are preferred.

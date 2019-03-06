@@ -1,13 +1,18 @@
+*.sublime-project
+*.sublime-workspace
+todo.txt
+reset-files.bash
+
 *.tar.gz
 
 *.exe
-src/jnitacoin
-src/jnitacoind
-src/jnitacoin-cli
-src/jnitacoin-tx
-src/test/test_jnitacoin
-src/test/test_jnitacoin_fuzzy
-src/qt/test/test_jnitacoin-qt
+src/joashcoin
+src/joashcoind
+src/joashcoin-cli
+src/joashcoin-tx
+src/test/test_joashcoin
+src/qt/test/test_joashcoin-qt
+src/bench/bench_joashcoin
 
 # autoreconf
 Makefile.in
@@ -30,8 +35,8 @@ config.log
 config.status
 configure
 libtool
-src/config/bitcoin-config.h
-src/config/bitcoin-config.h.in
+src/config/joashcoin-config.h
+src/config/joashcoin-config.h.in
 src/config/stamp-h1
 share/setup.nsi
 share/qt/Info.plist
@@ -43,12 +48,7 @@ src/qt/moc_*.cpp
 src/qt/forms/ui_*.h
 
 src/qt/test/moc*.cpp
-
-src/qt/bitcoin-qt.config
-src/qt/bitcoin-qt.creator
-src/qt/bitcoin-qt.creator.user
-src/qt/bitcoin-qt.files
-src/qt/bitcoin-qt.includes
+libconftest.dylib*
 
 .deps
 .dirstamp
@@ -80,16 +80,17 @@ src/qt/bitcoin-qt.includes
 # Compilation and Qt preprocessor part
 *.qm
 Makefile
-jnitacoin-qt
-jnitacoin-Qt.app
-background.tiff*
+joashcoin-qt
+JoashCoin-Qt.app
 
 # Unit-tests
 Makefile.test
-jnitacoin-qt_test
+joashcoin-qt_test
+src/test/buildenv.py
 
 # Resources cpp
 qrc_*.cpp
+
 # Mac specific
 .DS_Store
 build
@@ -98,7 +99,7 @@ build
 *.gcno
 *.gcda
 /*.info
-test_jnitacoin.coverage/
+test_joashcoin.coverage/
 total.coverage/
 coverage_percent.txt
 
@@ -106,12 +107,29 @@ coverage_percent.txt
 linux-coverage-build
 linux-build
 win32-build
-test/config.ini
-test/cache/*
+qa/pull-tester/tests_config.py
+qa/cache/*
 
 !src/leveldb*/Makefile
 
+.cproject
+.project
+.autotools
 /doc/doxygen/
 
-libbitcoinconsensus.pc
+libjoashcoinconsensus.pc
 contrib/devtools/split-debug.sh
+src/qt/joashcoin-qt.bash
+qa/pull-tester/tests-config.sh
+
+#development symlinks
+joashcoin-cli
+joashcoind
+joashcoin-qt
+make
+
+/docker/bin
+
+# CLion
+.idea
+cmake-build-debug

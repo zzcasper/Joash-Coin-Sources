@@ -1,11 +1,13 @@
-// Copyright (c) 2012-2017 The Bitcoin Core developers
+// Copyright (c) 2012-2015 The Bitcoin Core developers
 // Distributed under the MIT software license, see the accompanying
 // file COPYING or http://www.opensource.org/licenses/mit-license.php.
 
-#include <dbwrapper.h>
+#include "dbwrapper.h"
 
-#include <memory>
-#include <random.h>
+#include "util.h"
+#include "random.h"
+
+#include <boost/filesystem.hpp>
 
 #include <leveldb/cache.h>
 #include <leveldb/env.h>
@@ -18,10 +20,9 @@ class CBitcoinLevelDBLogger : public leveldb::Logger {
 public:
     // This code is adapted from posix_logger.h, which is why it is using vsprintf.
     // Please do not do this in normal code
-    void Logv(const char * format, va_list ap) override {
-            if (!LogAcceptCategory(BCLog::LEVELDB)) {
+    virtual void Logv(const char * format, va_list ap) override {
+            if (!LogAcceptCategory("leveldb"))
                 return;
-            }
             char buffer[500];
             for (int iter = 0; iter < 2; iter++) {
                 char* base;
@@ -63,7 +64,7 @@ public:
 
                 assert(p <= limit);
                 base[std::min(bufsize - 1, (int)(p - base))] = '\0';
-                LogPrintf("leveldb: %s", base);
+                LogPrintStr(base);
                 if (base != buffer) {
                     delete[] base;
                 }
@@ -89,9 +90,9 @@ static leveldb::Options GetOptions(size_t nCacheSize)
     return options;
 }
 
-CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
+CDBWrapper::CDBWrapper(const boost::filesystem::path& path, size_t nCacheSize, bool fMemory, bool fWipe, bool obfuscate)
 {
-    penv = nullptr;
+    penv = NULL;
     readoptions.verify_checksums = true;
     iteroptions.verify_checksums = true;
     iteroptions.fill_cache = false;
@@ -107,14 +108,14 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
             leveldb::Status result = leveldb::DestroyDB(path.string(), options);
             dbwrapper_private::HandleError(result);
         }
-        TryCreateDirectories(path);
+        TryCreateDirectory(path);
         LogPrintf("Opening LevelDB in %s\n", path.string());
     }
     leveldb::Status status = leveldb::DB::Open(options, path.string(), &pdb);
     dbwrapper_private::HandleError(status);
     LogPrintf("Opened LevelDB successfully\n");
 
-    if (gArgs.GetBoolArg("-forcecompactdb", false)) {
+    if (GetBoolArg("-forcecompactdb", false)) {
         LogPrintf("Starting database compaction of %s\n", path.string());
         pdb->CompactRange(nullptr, nullptr);
         LogPrintf("Finished database compaction of %s\n", path.string());
@@ -143,15 +144,15 @@ CDBWrapper::CDBWrapper(const fs::path& path, size_t nCacheSize, bool fMemory, bo
 CDBWrapper::~CDBWrapper()
 {
     delete pdb;
-    pdb = nullptr;
+    pdb = NULL;
     delete options.filter_policy;
-    options.filter_policy = nullptr;
+    options.filter_policy = NULL;
     delete options.info_log;
-    options.info_log = nullptr;
+    options.info_log = NULL;
     delete options.block_cache;
-    options.block_cache = nullptr;
+    options.block_cache = NULL;
     delete penv;
-    options.env = nullptr;
+    options.env = NULL;
 }
 
 bool CDBWrapper::WriteBatch(CDBBatch& batch, bool fSync)
@@ -189,7 +190,7 @@ bool CDBWrapper::IsEmpty()
 }
 
 CDBIterator::~CDBIterator() { delete piter; }
-bool CDBIterator::Valid() const { return piter->Valid(); }
+bool CDBIterator::Valid() { return piter->Valid(); }
 void CDBIterator::SeekToFirst() { piter->SeekToFirst(); }
 void CDBIterator::Next() { piter->Next(); }
 
@@ -214,4 +215,4 @@ const std::vector<unsigned char>& GetObfuscateKey(const CDBWrapper &w)
     return w.obfuscate_key;
 }
 
-} // namespace dbwrapper_private
+};

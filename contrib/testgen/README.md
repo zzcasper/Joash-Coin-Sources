@@ -1,6 +1,6 @@
 ### TestGen ###
 
-Utilities to generate test vectors for the data-driven JNitaCoin tests.
+Utilities to generate test vectors for the data-driven JoashCoin tests.
 
 Usage: 
 
