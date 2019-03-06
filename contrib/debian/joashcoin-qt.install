@@ -1,0 +1,6 @@
+usr/local/bin/joashcoin-qt usr/bin
+share/pixmaps/joashcoin32.xpm usr/share/pixmaps
+share/pixmaps/joashcoin16.xpm usr/share/pixmaps
+share/pixmaps/joashcoin128.png usr/share/pixmaps
+debian/joashcoin-qt.desktop usr/share/applications
+debian/joashcoin-qt.protocol usr/share/kde4/services/

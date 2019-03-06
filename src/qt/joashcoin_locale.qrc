@@ -1,0 +1,21 @@
+<!DOCTYPE RCC><RCC version="1.0">
+    <qresource prefix="/translations">
+        <file alias="bg">locale/joashcoin_bg.qm</file>
+        <file alias="de">locale/joashcoin_de.qm</file>
+        <file alias="en">locale/joashcoin_en.qm</file>
+        <file alias="es">locale/joashcoin_es.qm</file>
+        <file alias="fi">locale/joashcoin_fi.qm</file>
+        <file alias="fr">locale/joashcoin_fr.qm</file>
+        <file alias="it">locale/joashcoin_it.qm</file>
+        <file alias="ja">locale/joashcoin_ja.qm</file>
+        <file alias="nl">locale/joashcoin_nl.qm</file>
+        <file alias="pl">locale/joashcoin_pl.qm</file>
+        <file alias="pt">locale/joashcoin_pt.qm</file>
+        <file alias="ru">locale/joashcoin_ru.qm</file>
+        <file alias="sk">locale/joashcoin_sk.qm</file>
+        <file alias="sv">locale/joashcoin_sv.qm</file>
+        <file alias="vi">locale/joashcoin_vi.qm</file>
+        <file alias="zh_CN">locale/joashcoin_zh_CN.qm</file>
+        <file alias="zh_TW">locale/joashcoin_zh_TW.qm</file>
+    </qresource>
+</RCC>

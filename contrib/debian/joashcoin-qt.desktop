@@ -1,0 +1,13 @@
+[Desktop Entry]
+Encoding=UTF-8
+Name=JoashCoin Core
+Comment=JoashCoin P2P Cryptocurrency
+Comment[de]=Verbinde mit dem JoashCoin peer-to-peer Netzwerk
+Comment[fr]=JoashCoin, monnaie virtuelle cryptographique pair à pair
+Comment[tr]=JoashCoin, eşten eşe kriptografik sanal para birimi
+Exec=joashcoin-qt %u
+Terminal=false
+Type=Application
+Icon=joashcoin128
+MimeType=x-scheme-handler/joashcoin;
+Categories=Office;Finance;

@@ -1,0 +1,4 @@
+qt/qt_libjoashcoinqt_a-qrc_joashcoin_locale.o: \
+ qt/qrc_joashcoin_locale.cpp /usr/include/stdc-predef.h
+
+/usr/include/stdc-predef.h:
